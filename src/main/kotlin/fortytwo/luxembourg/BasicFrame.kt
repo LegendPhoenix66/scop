@@ -27,12 +27,24 @@ class BasicFrame(monitor: Int = -1) {
         glfwSetKeyCallback(
             display,
         ) { window, key, _, action, _ ->
+            println("$key: $action")
             if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
                 glfwSetWindowShouldClose(
                     window,
                     true,
                 ) // We will detect this in the rendering loop
             }
+        }
+        glfwSetMouseButtonCallback(display) { _, button, action, _ ->
+            println("$button: $action")
+        }
+        // scroll
+        glfwSetScrollCallback(display) { _, xoffset, yoffset ->
+            println("Scroll: $xoffset, $yoffset")
+        }
+        // mouse move
+        glfwSetCursorPosCallback(display) { _, xpos, ypos ->
+            println("Mouse: $xpos, $ypos")
         }
 
         loop()
