@@ -7,33 +7,35 @@ import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.system.MemoryUtil.NULL
 
+
 class BasicFrame(monitor: Int = -1) {
+    private var display = 0L
+
     init {
         println("Hello, LGWJL ${Version.getVersion()}!")
-        var errorCallback = GLFWErrorCallback.createPrint(System.err)
+        val errorCallback = GLFWErrorCallback.createPrint(System.err)
         glfwSetErrorCallback(errorCallback)
         check(glfwInit()) { "Unable to initialize GLFW" }
 
-        val display = createDisplay("My Frame", true, monitor)
+        display = createDisplay("My Frame", true, monitor)
         glfwSetInputMode(display, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
         glfwSetInputMode(display, GLFW_CURSOR, GLFW_CURSOR_HIDDEN)
 
         glfwMakeContextCurrent(display)
-        GL.createCapabilities()
 
-        glClearColor(0.7f, 0.0f, 0.7f, 0.0f)
-
-        // Run the rendering loop until the user has attempted to close
-        // the window or has pressed the ESCAPE key.
-        while (!glfwWindowShouldClose(display)) {
-            glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT) // clear the framebuffer
-
-            glfwSwapBuffers(display) // swap the color buffers
-
-            // Poll for window events. The key callback above will only be
-            // invoked during this call.
-            glfwPollEvents()
+        // Set up a key callback. It will be called every time a key is pressed, repeated or released.
+        glfwSetKeyCallback(
+            display,
+        ) { window, key, _, action, _ ->
+            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
+                glfwSetWindowShouldClose(
+                    window,
+                    true,
+                ) // We will detect this in the rendering loop
+            }
         }
+
+        loop()
     }
 
     private fun createDisplay(
@@ -93,5 +95,28 @@ class BasicFrame(monitor: Int = -1) {
         glfwSwapInterval(1)
         glfwShowWindow(id)
         return id
+    }
+
+    private fun loop() {
+        // This line is critical for LWJGL's interoperation with GLFW's
+        // OpenGL context, or any context that is managed externally.
+        // LWJGL detects the context that is current in the current thread,
+        // creates the GLCapabilities instance and makes the OpenGL
+        // bindings available for use.
+        GL.createCapabilities()
+
+        glClearColor(0.7f, 0.0f, 0.7f, 0.0f)
+
+        // Run the rendering loop until the user has attempted to close
+        // the window or has pressed the ESCAPE key.
+        while (!glfwWindowShouldClose(display)) {
+            glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT) // clear the framebuffer
+
+            glfwSwapBuffers(display) // swap the color buffers
+
+            // Poll for window events. The key callback above will only be
+            // invoked during this call.
+            glfwPollEvents()
+        }
     }
 }
