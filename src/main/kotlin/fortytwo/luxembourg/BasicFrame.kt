@@ -7,47 +7,59 @@ import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
 import org.lwjgl.system.MemoryUtil.NULL
 
-
 class BasicFrame(monitor: Int = -1) {
     private var display = 0L
 
     init {
+        initializeGLFW()
+        display = createDisplay("My Frame", true, monitor)
+        setCallbacks()
+        loop()
+    }
+
+    private fun initializeGLFW() {
         println("Hello, LGWJL ${Version.getVersion()}!")
         val errorCallback = GLFWErrorCallback.createPrint(System.err)
         glfwSetErrorCallback(errorCallback)
         check(glfwInit()) { "Unable to initialize GLFW" }
+    }
 
-        display = createDisplay("My Frame", true, monitor)
-        glfwSetInputMode(display, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
+    private fun setCallbacks() {
+        // glfwSetInputMode(display, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
         glfwSetInputMode(display, GLFW_CURSOR, GLFW_CURSOR_HIDDEN)
-
         glfwMakeContextCurrent(display)
 
-        // Set up a key callback. It will be called every time a key is pressed, repeated or released.
-        glfwSetKeyCallback(
-            display,
-        ) { window, key, _, action, _ ->
+        setKeyCallback()
+        setMouseButtonCallback()
+        setScrollCallback()
+        setCursorPosCallback()
+    }
+
+    private fun setKeyCallback() {
+        glfwSetKeyCallback(display) { window, key, _, action, _ ->
             println("$key: $action")
             if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-                glfwSetWindowShouldClose(
-                    window,
-                    true,
-                ) // We will detect this in the rendering loop
+                glfwSetWindowShouldClose(window, true)
             }
         }
+    }
+
+    private fun setMouseButtonCallback() {
         glfwSetMouseButtonCallback(display) { _, button, action, _ ->
             println("$button: $action")
         }
-        // scroll
+    }
+
+    private fun setScrollCallback() {
         glfwSetScrollCallback(display) { _, xoffset, yoffset ->
             println("Scroll: $xoffset, $yoffset")
         }
-        // mouse move
+    }
+
+    private fun setCursorPosCallback() {
         glfwSetCursorPosCallback(display) { _, xpos, ypos ->
             println("Mouse: $xpos, $ypos")
         }
-
-        loop()
     }
 
     private fun createDisplay(
