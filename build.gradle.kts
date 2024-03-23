@@ -2,19 +2,40 @@ plugins {
     kotlin("jvm") version "1.9.22"
 }
 
-val joglversion = "2.4.0"
+val lwjglVersion = "3.3.3"
+val lwjglNatives = "natives-windows"
 
 group = "fortytwo.luxembourg"
 version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
-    maven(url = "https://jogamp.org/deployment/maven")
 }
 
 dependencies {
-    implementation("org.jogamp.gluegen:gluegen-rt-main:$joglversion")
-    implementation("org.jogamp.jogl:jogl-all-main:$joglversion")
+    implementation(platform("org.lwjgl:lwjgl-bom:$lwjglVersion"))
+
+    implementation("org.lwjgl", "lwjgl")
+    implementation("org.lwjgl", "lwjgl-assimp")
+    implementation("org.lwjgl", "lwjgl-bgfx")
+    implementation("org.lwjgl", "lwjgl-glfw")
+    implementation("org.lwjgl", "lwjgl-nanovg")
+    implementation("org.lwjgl", "lwjgl-nuklear")
+    implementation("org.lwjgl", "lwjgl-openal")
+    implementation("org.lwjgl", "lwjgl-opengl")
+    implementation("org.lwjgl", "lwjgl-par")
+    implementation("org.lwjgl", "lwjgl-stb")
+    implementation("org.lwjgl", "lwjgl-vulkan")
+    runtimeOnly("org.lwjgl", "lwjgl", classifier = lwjglNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-assimp", classifier = lwjglNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-bgfx", classifier = lwjglNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-glfw", classifier = lwjglNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-nanovg", classifier = lwjglNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-nuklear", classifier = lwjglNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-openal", classifier = lwjglNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-opengl", classifier = lwjglNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-par", classifier = lwjglNatives)
+    runtimeOnly("org.lwjgl", "lwjgl-stb", classifier = lwjglNatives)
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 }
