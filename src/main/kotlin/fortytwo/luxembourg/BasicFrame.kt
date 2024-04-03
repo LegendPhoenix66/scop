@@ -5,16 +5,92 @@ import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
 import org.lwjgl.opengl.GL11.*
+import org.lwjgl.opengl.GL15.*
+import org.lwjgl.opengl.GL20.glEnableVertexAttribArray
+import org.lwjgl.opengl.GL20.glVertexAttribPointer
+import org.lwjgl.opengl.GL30.*
 import org.lwjgl.system.MemoryUtil.NULL
 
 class BasicFrame(monitor: Int = -1) {
     private var display = 0L
+    val drawMode = DrawMode.RANDOM_COLOR
 
     init {
         initializeGLFW()
         display = createDisplay("My Frame", true, monitor)
         setCallbacks()
         loop()
+    }
+
+    fun drawSquare() {
+        // square
+        val vertices = // positions
+            floatArrayOf(
+                -0.5f, 0.5f, 0.0f, // top-left
+                0.5f, 0.5f, 0.0f, // top-right
+                0.5f, -0.5f, 0.0f, // bottom-right
+                -0.5f, -0.5f, 0.0f, // bottom-left
+            )
+        val indices = // indices
+            intArrayOf(
+                0, 1, 2, // first triangle
+                2, 3, 0, // second triangle
+            )
+
+        val vao = glGenVertexArrays() // vertex array object
+        glBindVertexArray(vao) // bind vertex array object
+
+        val vbo = glGenBuffers() // vertex buffer object
+        glBindBuffer(GL_ARRAY_BUFFER, vbo) // bind vertex buffer object
+        glBufferData(GL_ARRAY_BUFFER, vertices, GL_STATIC_DRAW) // copy vertices to buffer
+
+        val ebo = glGenBuffers() // element buffer object
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo) // bind element buffer object
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices, GL_STATIC_DRAW) // copy indices to buffer
+
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, 3 * 4, 0) // position attribute
+        glEnableVertexAttribArray(0) // enable the attribute
+
+        when (drawMode) {
+            DrawMode.FULL -> glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            DrawMode.POINTS -> {
+                // red
+                glColor3f(1.0f, 0.0f, 0.0f)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_POINT)
+            }
+            DrawMode.LINES -> {
+                //blue
+                glColor3f(0.0f, 0.0f, 1.0f)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+            }
+            DrawMode.BLANK -> glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            DrawMode.WHITE -> {
+                glColor3f(1.0f, 1.0f, 1.0f)
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            }
+            DrawMode.RANDOM_COLOR -> {
+                val r1 = Math.random().toFloat()
+                val g1 = Math.random().toFloat()
+                val b1 = Math.random().toFloat()
+                glColor3f(r1, g1, b1)
+                glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0) // draw the first triangle
+
+                val r2 = Math.random().toFloat()
+                val g2 = Math.random().toFloat()
+                val b2 = Math.random().toFloat()
+                glColor3f(r2, g2, b2)
+                glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 3 * 4) // draw the second triangle
+            }
+        }
+
+        //glDrawElements(GL_TRIANGLES, indices.size, GL_UNSIGNED_INT, 0) // draw the square
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0) // unbind the buffer
+        glBindVertexArray(0) // unbind the vertex array object
+
+        glDeleteVertexArrays(vao) // delete the vertex array object
+        glDeleteBuffers(vbo) // delete the vertex buffer object
+        glDeleteBuffers(ebo) // delete the element buffer object
     }
 
     private fun initializeGLFW() {
@@ -129,12 +205,14 @@ class BasicFrame(monitor: Int = -1) {
         // bindings available for use.
         GL.createCapabilities()
 
-        glClearColor(0.7f, 0.0f, 0.7f, 0.0f)
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f)
 
         // Run the rendering loop until the user has attempted to close
         // the window or has pressed the ESCAPE key.
         while (!glfwWindowShouldClose(display)) {
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT) // clear the framebuffer
+
+            drawSquare()
 
             glfwSwapBuffers(display) // swap the color buffers
 
