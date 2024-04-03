@@ -4,8 +4,6 @@ import org.lwjgl.Version
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
 import org.lwjgl.opengl.GL
-import org.lwjgl.opengl.GL11.*
-import org.lwjgl.opengl.GL15.*
 import org.lwjgl.opengl.GL20.glEnableVertexAttribArray
 import org.lwjgl.opengl.GL20.glVertexAttribPointer
 import org.lwjgl.opengl.GL30.*
@@ -13,16 +11,17 @@ import org.lwjgl.system.MemoryUtil.NULL
 
 class BasicFrame(monitor: Int = -1) {
     private var display = 0L
-    val drawMode = DrawMode.RANDOM_COLOR
+    private val drawMode = DrawMode.RANDOM_COLOR
 
     init {
         initializeGLFW()
         display = createDisplay("My Frame", true, monitor)
         setCallbacks()
+        glfwFocusWindow(display)
         loop()
     }
 
-    fun drawSquare() {
+    private fun drawSquare() {
         // square
         val vertices = // positions
             floatArrayOf(
@@ -52,38 +51,48 @@ class BasicFrame(monitor: Int = -1) {
         glEnableVertexAttribArray(0) // enable the attribute
 
         when (drawMode) {
-            DrawMode.FULL -> glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            DrawMode.FULL -> {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+                glDrawElements(GL_TRIANGLES, indices.size, GL_UNSIGNED_INT, 0) // draw the square
+            }
             DrawMode.POINTS -> {
                 // red
                 glColor3f(1.0f, 0.0f, 0.0f)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT)
+                glDrawElements(GL_POINTS, indices.size, GL_UNSIGNED_INT, 0) // draw the square
             }
             DrawMode.LINES -> {
-                //blue
+                // blue
                 glColor3f(0.0f, 0.0f, 1.0f)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+                glDrawElements(GL_TRIANGLES, indices.size, GL_UNSIGNED_INT, 0) // draw the square
             }
-            DrawMode.BLANK -> glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+            DrawMode.BLANK -> {
+                glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+                glDrawElements(GL_TRIANGLES, 0, GL_UNSIGNED_INT, 0) // draw the square
+            }
             DrawMode.WHITE -> {
                 glColor3f(1.0f, 1.0f, 1.0f)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
+                glDrawElements(GL_TRIANGLES, indices.size, GL_UNSIGNED_INT, 0) // draw the square
             }
             DrawMode.RANDOM_COLOR -> {
-                val r1 = Math.random().toFloat()
-                val g1 = Math.random().toFloat()
-                val b1 = Math.random().toFloat()
-                glColor3f(r1, g1, b1)
-                glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0) // draw the first triangle
+                for (i in indices.indices step 3) {
+                    // Get the coordinates of the triangle
+                    val x = vertices[indices[i] * 3]
+                    val y = vertices[indices[i] * 3 + 1]
+                    val z = vertices[indices[i] * 3 + 2]
 
-                val r2 = Math.random().toFloat()
-                val g2 = Math.random().toFloat()
-                val b2 = Math.random().toFloat()
-                glColor3f(r2, g2, b2)
-                glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 3 * 4) // draw the second triangle
+                    // Calculate the color based on the coordinates
+                    val r = (x + 1) / 2 // normalize to 0-1 range
+                    val g = (y + 1) / 2 // normalize to 0-1 range
+                    val b = (z + 1) / 2 // normalize to 0-1 range
+
+                    glColor3f(r, g, b)
+                    glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, i * 4L) // draw the triangle
+                }
             }
         }
-
-        //glDrawElements(GL_TRIANGLES, indices.size, GL_UNSIGNED_INT, 0) // draw the square
 
         glBindBuffer(GL_ARRAY_BUFFER, 0) // unbind the buffer
         glBindVertexArray(0) // unbind the vertex array object
@@ -101,7 +110,7 @@ class BasicFrame(monitor: Int = -1) {
     }
 
     private fun setCallbacks() {
-        // glfwSetInputMode(display, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
+        glfwSetInputMode(display, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
         glfwSetInputMode(display, GLFW_CURSOR, GLFW_CURSOR_HIDDEN)
         glfwMakeContextCurrent(display)
 
