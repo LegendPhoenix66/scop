@@ -6,7 +6,7 @@ fun main() {
     println("0: Primary")
     println("1: Secondary")
     println("-1: windowed mode")
-    val monitor = readln().toInt()
+    val monitor = readln().toIntOrNull() ?: -1
 
     val virtualThread = Thread.startVirtualThread { BasicFrame(monitor = monitor) }
     virtualThread.join()
