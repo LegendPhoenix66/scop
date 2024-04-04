@@ -1,5 +1,6 @@
 package fortytwo.luxembourg
 
+import org.joml.Vector3f
 import org.lwjgl.Version
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -11,31 +12,37 @@ import org.lwjgl.system.MemoryUtil.NULL
 
 class BasicFrame(monitor: Int = -1) {
     private var display = 0L
-    private val drawMode = DrawMode.RANDOM_COLOR
-
+    private var vertices: FloatArray = floatArrayOf()
+    private var indices: IntArray = intArrayOf()
+    private val drawMode = DrawMode.WHITE
     init {
         initializeGLFW()
         display = createDisplay("My Frame", true, monitor)
         setCallbacks()
         glfwFocusWindow(display)
+        drawSquare()
         loop()
     }
 
     private fun drawSquare() {
         // square
-        val vertices = // positions
+        val squareVertices = // positions
             floatArrayOf(
                 -0.5f, 0.5f, 0.0f, // top-left
                 0.5f, 0.5f, 0.0f, // top-right
                 0.5f, -0.5f, 0.0f, // bottom-right
                 -0.5f, -0.5f, 0.0f, // bottom-left
             )
-        val indices = // indices
+        val squareIndices = // indices
             intArrayOf(
                 0, 1, 2, // first triangle
                 2, 3, 0, // second triangle
             )
+        vertices = squareVertices
+        indices = squareIndices
+    }
 
+    private fun drawObj() {
         val vao = glGenVertexArrays() // vertex array object
         glBindVertexArray(vao) // bind vertex array object
 
@@ -89,6 +96,7 @@ class BasicFrame(monitor: Int = -1) {
                     val b = (z + 1) / 2 // normalize to 0-1 range
 
                     glColor3f(r, g, b)
+
                     glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, i * 4L) // draw the triangle
                 }
             }
@@ -221,7 +229,7 @@ class BasicFrame(monitor: Int = -1) {
         while (!glfwWindowShouldClose(display)) {
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT) // clear the framebuffer
 
-            drawSquare()
+            drawObj()
 
             glfwSwapBuffers(display) // swap the color buffers
 
