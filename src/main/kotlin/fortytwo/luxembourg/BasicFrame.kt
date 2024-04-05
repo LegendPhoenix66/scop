@@ -1,6 +1,5 @@
 package fortytwo.luxembourg
 
-import org.joml.Vector3f
 import org.lwjgl.Version
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -10,15 +9,17 @@ import org.lwjgl.opengl.GL20.glVertexAttribPointer
 import org.lwjgl.opengl.GL30.*
 import org.lwjgl.system.MemoryUtil.NULL
 
-class BasicFrame(monitor: Int = -1) {
+class BasicFrame(monitor: Int = -1) : FileOpenListener {
     private var display = 0L
     private var vertices: FloatArray = floatArrayOf()
     private var indices: IntArray = intArrayOf()
     private val drawMode = DrawMode.WHITE
+
     init {
+        FileOpener.fileOpenListener = this
         initializeGLFW()
         display = createDisplay("My Frame", true, monitor)
-        setCallbacks()
+        GLFWCallbackHandler(display)
         glfwFocusWindow(display)
         drawSquare()
         loop()
@@ -117,73 +118,6 @@ class BasicFrame(monitor: Int = -1) {
         check(glfwInit()) { "Unable to initialize GLFW" }
     }
 
-    private fun setCallbacks() {
-        glfwSetInputMode(display, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
-        glfwSetInputMode(display, GLFW_CURSOR, GLFW_CURSOR_HIDDEN)
-        glfwMakeContextCurrent(display)
-
-        setKeyCallback()
-        setMouseButtonCallback()
-        setScrollCallback()
-        setCursorPosCallback()
-    }
-
-    private fun setKeyCallback() {
-        glfwSetKeyCallback(display) { window, key, _, action, _ ->
-            println("$key: $action")
-            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-                glfwSetWindowShouldClose(window, true)
-            } else if (key == GLFW_KEY_O && action == GLFW_RELEASE) {
-                // open file-chooser
-                java.awt.EventQueue.invokeLater {
-                    val chooser = javax.swing.JFileChooser()
-                    chooser.currentDirectory = java.io.File(".")
-                    val result = chooser.showOpenDialog(null)
-                    if (result == javax.swing.JFileChooser.APPROVE_OPTION) {
-                        val file = chooser.selectedFile
-                        println("Selected file: ${file.absolutePath}")
-
-                        // convert file to array of vertices and indices
-                        val objVertices = mutableListOf<Float>()
-                        val objIndices = mutableListOf<Int>()
-                        file.forEachLine {
-                            val parts = it.split(" ")
-                            if (parts[0] == "v") {
-                                objVertices.add(parts[1].toFloat())
-                                objVertices.add(parts[2].toFloat())
-                                objVertices.add(parts[3].toFloat())
-                            } else if (parts[0] == "f") {
-                                objIndices.add(parts[1].toInt() - 1)
-                                objIndices.add(parts[2].toInt() - 1)
-                                objIndices.add(parts[3].toInt() - 1)
-                            }
-                        }
-                        vertices = objVertices.toFloatArray()
-                        indices = objIndices.toIntArray()
-                    }
-                }
-            }
-        }
-    }
-
-    private fun setMouseButtonCallback() {
-        glfwSetMouseButtonCallback(display) { _, button, action, _ ->
-            println("$button: $action")
-        }
-    }
-
-    private fun setScrollCallback() {
-        glfwSetScrollCallback(display) { _, xoffset, yoffset ->
-            println("Scroll: $xoffset, $yoffset")
-        }
-    }
-
-    private fun setCursorPosCallback() {
-        glfwSetCursorPosCallback(display) { _, xpos, ypos ->
-            println("Mouse: $xpos, $ypos")
-        }
-    }
-
     private fun createDisplay(
         title: String = "Display",
         resizable: Boolean = false,
@@ -243,6 +177,8 @@ class BasicFrame(monitor: Int = -1) {
         return id
     }
 
+    private var frames = 0
+    private var lastTime = System.currentTimeMillis()
     private fun loop() {
         // This line is critical for LWJGL's interoperation with GLFW's
         // OpenGL context, or any context that is managed externally.
@@ -265,6 +201,24 @@ class BasicFrame(monitor: Int = -1) {
             // Poll for window events. The key callback above will only be
             // invoked during this call.
             glfwPollEvents()
+
+            // Increment the frames counter
+            frames++
+
+            // Check if a second has passed
+            if (System.currentTimeMillis() > lastTime + 1000) {
+                // Update the window title with the FPS count
+                glfwSetWindowTitle(display, "FPS: $frames")
+
+                // Reset the frames counter and the timer
+                frames = 0
+                lastTime = System.currentTimeMillis()
+            }
         }
+    }
+
+    override fun onFileOpen(vertices: FloatArray, indices: IntArray) {
+        this.vertices = vertices
+        this.indices = indices
     }
 }
