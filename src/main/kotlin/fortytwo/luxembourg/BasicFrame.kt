@@ -314,6 +314,36 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
                     FileOpener().openFile(this)
                 }
             }
+            GLFW_KEY_KP_ADD -> {
+                if (action == GLFW_RELEASE) {
+                    scale(0.1f)
+                }
+            }
+            GLFW_KEY_KP_SUBTRACT -> {
+                if (action == GLFW_RELEASE) {
+                    scale(-0.1f)
+                }
+            }
+            GLFW_KEY_LEFT -> {
+                if (action == GLFW_RELEASE || action == GLFW_REPEAT) {
+                    rotate(0.1f, 0f)
+                }
+            }
+            GLFW_KEY_RIGHT -> {
+                if (action == GLFW_RELEASE) {
+                    rotate(-0.1f, 0f)
+                }
+            }
+            GLFW_KEY_UP -> {
+                if (action == GLFW_RELEASE) {
+                    rotate(0f, 0.1f)
+                }
+            }
+            GLFW_KEY_DOWN -> {
+                if (action == GLFW_RELEASE) {
+                    rotate(0f, -0.1f)
+                }
+            }
         }
     }
 
