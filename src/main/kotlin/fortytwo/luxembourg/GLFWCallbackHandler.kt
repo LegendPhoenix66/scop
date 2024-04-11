@@ -2,7 +2,7 @@ package fortytwo.luxembourg
 
 import org.lwjgl.glfw.GLFW
 
-class GLFWCallbackHandler(private val display: Long) {
+class GLFWCallbackHandler(private val display: Long, private val callbackListener: CallbackListener) {
     init {
         GLFW.glfwSetInputMode(display, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_DISABLED)
         GLFW.glfwSetInputMode(display, GLFW.GLFW_CURSOR, GLFW.GLFW_CURSOR_HIDDEN)
@@ -15,14 +15,8 @@ class GLFWCallbackHandler(private val display: Long) {
     }
 
     private fun setKeyCallback() {
-        GLFW.glfwSetKeyCallback(display) { window, key, _, action, _ ->
-            println("$key: $action")
-            if (key == GLFW.GLFW_KEY_ESCAPE && action == GLFW.GLFW_RELEASE) {
-                GLFW.glfwSetWindowShouldClose(window, true)
-            } else if (key == GLFW.GLFW_KEY_O && action == GLFW.GLFW_RELEASE) {
-                // open file-chooser
-                FileOpener.openFile()
-            }
+        GLFW.glfwSetKeyCallback(display) { _, key, _, action, _ ->
+            callbackListener.onKey(key, action)
         }
     }
 
@@ -35,6 +29,7 @@ class GLFWCallbackHandler(private val display: Long) {
     private fun setScrollCallback() {
         GLFW.glfwSetScrollCallback(display) { _, xoffset, yoffset ->
             println("Scroll: $xoffset, $yoffset")
+            callbackListener.onScroll(xoffset, yoffset)
         }
     }
 

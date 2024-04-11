@@ -4,10 +4,8 @@ import java.awt.EventQueue
 import java.io.File
 import javax.swing.JFileChooser
 
-object FileOpener {
-    var fileOpenListener: FileOpenListener? = null
-
-    fun openFile() {
+class FileOpener {
+    fun openFile(fileOpenListener: FileOpenListener) {
         EventQueue.invokeLater {
             val chooser = JFileChooser()
             chooser.currentDirectory = File(".")
@@ -31,7 +29,7 @@ object FileOpener {
                         objIndices.add(parts[3].toInt() - 1)
                     }
                 }
-                fileOpenListener?.onFileOpen(objVertices.toFloatArray(), objIndices.toIntArray())
+                fileOpenListener.onFileOpen(objVertices.toFloatArray(), objIndices.toIntArray())
             }
         }
     }

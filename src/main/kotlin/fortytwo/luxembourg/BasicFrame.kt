@@ -9,17 +9,16 @@ import org.lwjgl.opengl.GL20.glVertexAttribPointer
 import org.lwjgl.opengl.GL30.*
 import org.lwjgl.system.MemoryUtil.NULL
 
-class BasicFrame(monitor: Int = -1) : FileOpenListener {
+class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
     private var display = 0L
     private var vertices: FloatArray = floatArrayOf()
     private var indices: IntArray = intArrayOf()
     private val drawMode = DrawMode.WHITE
 
     init {
-        FileOpener.fileOpenListener = this
         initializeGLFW()
         display = createDisplay("My Frame", true, monitor)
-        GLFWCallbackHandler(display)
+        GLFWCallbackHandler(display, this)
         glfwFocusWindow(display)
         drawSquare()
         loop()
@@ -221,4 +220,33 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener {
         this.vertices = vertices
         this.indices = indices
     }
+
+    override fun onKey(key: Int, action: Int) {
+        println("$key: $action")
+        when (key) {
+            GLFW_KEY_ESCAPE -> {
+                if (action == GLFW_RELEASE) {
+                    glfwSetWindowShouldClose(display, true)
+                }
+            }
+            GLFW_KEY_O -> {
+                if (action == GLFW_RELEASE) {
+                    FileOpener().openFile(this)
+                }
+            }
+        }
+    }
+
+    override fun onMouseButton(button: Int, action: Int) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onScroll(xoffset: Double, yoffset: Double) {
+        scale(yoffset.toFloat())
+    }
+
+    override fun onCursorPos(xpos: Double, ypos: Double) {
+        TODO("Not yet implemented")
+    }
+}
 }
