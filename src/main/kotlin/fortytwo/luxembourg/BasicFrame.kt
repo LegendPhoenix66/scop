@@ -46,6 +46,10 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
                 0, 1, 2, // first triangle
                 2, 3, 0, // second triangle
             )
+        // scale the square
+        for (i in squareVertices.indices) {
+            squareVertices[i] *= scale
+        }
         vertices = squareVertices
         indices = squareIndices
     }
@@ -71,6 +75,9 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
                 2, 3, 0, // second triangle
             )
         // scale the square
+        for (i in squareVertices.indices) {
+            squareVertices[i] *= scale
+        }
         vertices = squareVertices
         indices = squareIndices
     }
