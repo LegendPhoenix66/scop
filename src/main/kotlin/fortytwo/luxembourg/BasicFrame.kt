@@ -104,6 +104,7 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
             DrawMode.POINTS -> {
                 // red
                 glColor3f(1.0f, 0.0f, 0.0f)
+                glPointSize(10.0f)
                 glPolygonMode(GL_FRONT_AND_BACK, GL_POINT)
                 glDrawElements(GL_POINTS, indices.size, GL_UNSIGNED_INT, 0) // draw the square
             }
