@@ -1,5 +1,9 @@
 package fortytwo.luxembourg
 
+import org.joml.Matrix4f
+import org.joml.Vector3f
+import org.joml.Vector3i
+import org.lwjgl.BufferUtils
 import org.lwjgl.Version
 import org.lwjgl.glfw.GLFW.*
 import org.lwjgl.glfw.GLFWErrorCallback
@@ -8,6 +12,9 @@ import org.lwjgl.opengl.GL20.glEnableVertexAttribArray
 import org.lwjgl.opengl.GL20.glVertexAttribPointer
 import org.lwjgl.opengl.GL30.*
 import org.lwjgl.system.MemoryUtil.NULL
+import java.nio.IntBuffer
+import kotlin.math.cos
+import kotlin.math.sin
 
 class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
     private var display = 0L
@@ -20,18 +27,19 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
         display = createDisplay("My Frame", true, monitor)
         GLFWCallbackHandler(display, this)
         glfwFocusWindow(display)
-        drawSquare()
+        drawSquareOrtho()
         loop()
     }
 
-    private fun drawSquare() {
+    private fun drawSquareScreen(scale: Float = 0.5f) {
+        useOrthoProjection = false
         // square
         val squareVertices = // positions
             floatArrayOf(
-                -0.5f, 0.5f, 0.0f, // top-left
-                0.5f, 0.5f, 0.0f, // top-right
-                0.5f, -0.5f, 0.0f, // bottom-right
-                -0.5f, -0.5f, 0.0f, // bottom-left
+                -1.0f, 1.0f, 0.0f, // top-left
+                1.0f, 1.0f, 0.0f, // top-right
+                1.0f, -1.0f, 0.0f, // bottom-right
+                -1.0f, -1.0f, 0.0f, // bottom-left
             )
         val squareIndices = // indices
             intArrayOf(
@@ -42,6 +50,30 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
         indices = squareIndices
     }
 
+    private fun drawSquareOrtho(scale: Float = 1f) {
+        useOrthoProjection = true
+        val topRight = Vector3f(50f, 50f, 0f) // top-right
+        val topLeft = Vector3f(-50f, 50f, 0f) // top-left
+        val bottomLeft = Vector3f(-50f, -50f, 0f) // bottom-left
+        val bottomRight = Vector3f(50f, -50f, 0f) // bottom-right
+
+        // square
+        val squareVertices = // positions
+            floatArrayOf(
+                topLeft.x, topLeft.y, topLeft.z, // top-left
+                topRight.x, topRight.y, topRight.z, // top-right
+                bottomRight.x, bottomRight.y, bottomRight.z, // bottom-right
+                bottomLeft.x, bottomLeft.y, bottomLeft.z, // bottom-left
+            )
+        val squareIndices = // indices
+            intArrayOf(
+                0, 1, 2, // first triangle
+                2, 3, 0, // second triangle
+            )
+        // scale the square
+        vertices = squareVertices
+        indices = squareIndices
+    }
     private fun drawObj() {
         val vao = glGenVertexArrays() // vertex array object
         glBindVertexArray(vao) // bind vertex array object
@@ -171,6 +203,12 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
         glfwMakeContextCurrent(id)
         GL.createCapabilities()
 
+        // Set up the orthographic projection matrix
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(0.0, monitorWidth.toDouble(), monitorHeight.toDouble(), 0.0, -1.0, 1.0)
+        glMatrixMode(GL_MODELVIEW)
+
         glfwSwapInterval(1)
         glfwShowWindow(id)
         return id
@@ -178,6 +216,7 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
 
     private var frames = 0
     private var lastTime = System.currentTimeMillis()
+    private var useOrthoProjection = false
     private fun loop() {
         // This line is critical for LWJGL's interoperation with GLFW's
         // OpenGL context, or any context that is managed externally.
@@ -192,6 +231,12 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
         // the window or has pressed the ESCAPE key.
         while (!glfwWindowShouldClose(display)) {
             glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT) // clear the framebuffer
+
+            if (useOrthoProjection) {
+                drawInOrthoProjection()
+            } else {
+                drawInScreenSpace()
+            }
 
             drawObj()
 
@@ -216,6 +261,33 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
         }
     }
 
+    private fun drawInScreenSpace() {
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)
+        glMatrixMode(GL_MODELVIEW)
+    }
+    private fun drawInOrthoProjection() {
+        val widthBuffer: IntBuffer = BufferUtils.createIntBuffer(1)
+        val heightBuffer: IntBuffer = BufferUtils.createIntBuffer(1)
+
+        glfwGetWindowSize(display, widthBuffer, heightBuffer)
+
+        val monitorWidth = widthBuffer[0]
+        val monitorHeight = heightBuffer[0]
+
+        glMatrixMode(GL_PROJECTION)
+        glLoadIdentity()
+        glOrtho(
+            -monitorWidth.toDouble() / 2,
+            monitorWidth.toDouble() / 2,
+            -monitorHeight.toDouble() / 2,
+            monitorHeight.toDouble() / 2,
+            -100.0,
+            100.0,
+        )
+        glMatrixMode(GL_MODELVIEW)
+    }
     override fun onFileOpen(vertices: FloatArray, indices: IntArray) {
         this.vertices = vertices
         this.indices = indices
