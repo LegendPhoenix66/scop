@@ -2,7 +2,7 @@ package fortytwo.luxembourg
 
 import org.joml.Matrix4f
 import org.joml.Vector3f
-import org.joml.Vector3i
+import org.joml.Vector4f
 import org.lwjgl.BufferUtils
 import org.lwjgl.Version
 import org.lwjgl.glfw.GLFW.*
@@ -13,14 +13,12 @@ import org.lwjgl.opengl.GL20.glVertexAttribPointer
 import org.lwjgl.opengl.GL30.*
 import org.lwjgl.system.MemoryUtil.NULL
 import java.nio.IntBuffer
-import kotlin.math.cos
-import kotlin.math.sin
 
 class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
     private var display = 0L
     private var vertices: FloatArray = floatArrayOf()
     private var indices: IntArray = intArrayOf()
-    private val drawMode = DrawMode.WHITE
+    private val drawMode = DrawMode.LINES
 
     init {
         initializeGLFW()
@@ -275,6 +273,7 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
         glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0)
         glMatrixMode(GL_MODELVIEW)
     }
+
     private fun drawInOrthoProjection() {
         val widthBuffer: IntBuffer = BufferUtils.createIntBuffer(1)
         val heightBuffer: IntBuffer = BufferUtils.createIntBuffer(1)
@@ -315,12 +314,12 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
                 }
             }
             GLFW_KEY_KP_ADD -> {
-                if (action == GLFW_RELEASE) {
+                if (action == GLFW_RELEASE || action == GLFW_REPEAT) {
                     scale(0.1f)
                 }
             }
             GLFW_KEY_KP_SUBTRACT -> {
-                if (action == GLFW_RELEASE) {
+                if (action == GLFW_RELEASE || action == GLFW_REPEAT) {
                     scale(-0.1f)
                 }
             }
@@ -330,17 +329,17 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
                 }
             }
             GLFW_KEY_RIGHT -> {
-                if (action == GLFW_RELEASE) {
+                if (action == GLFW_RELEASE || action == GLFW_REPEAT) {
                     rotate(-0.1f, 0f)
                 }
             }
             GLFW_KEY_UP -> {
-                if (action == GLFW_RELEASE) {
+                if (action == GLFW_RELEASE || action == GLFW_REPEAT) {
                     rotate(0f, 0.1f)
                 }
             }
             GLFW_KEY_DOWN -> {
-                if (action == GLFW_RELEASE) {
+                if (action == GLFW_RELEASE || action == GLFW_REPEAT) {
                     rotate(0f, -0.1f)
                 }
             }
@@ -358,5 +357,32 @@ class BasicFrame(monitor: Int = -1) : FileOpenListener, CallbackListener {
     override fun onCursorPos(xpos: Double, ypos: Double) {
         TODO("Not yet implemented")
     }
+
+    private fun scale(scale: Float) {
+        val scaleMatrix = Matrix4f().scale(1+scale)
+        for (i in vertices.indices step 3) {
+            val vertex = Vector3f(vertices[i], vertices[i + 1], vertices[i + 2])
+            scaleMatrix.transform(vertex)
+            vertices[i] = vertex.x
+            vertices[i + 1] = vertex.y
+            vertices[i + 2] = vertex.z
+        }
+    }
+
+    private fun rotate(x: Float, y: Float) {
+        val rotationMatrix = Matrix4f().rotateX(x).rotateY(y)
+        for (i in vertices.indices step 3) {
+            val vertex = Vector3f(vertices[i], vertices[i + 1], vertices[i + 2])
+            rotationMatrix.transform(vertex)
+            vertices[i] = vertex.x
+            vertices[i + 1] = vertex.y
+            vertices[i + 2] = vertex.z
+        }
+    }
 }
+
+fun Matrix4f.transform(vector: Vector3f) {
+    val vec4 = Vector4f(vector, 1f)
+    this.transform(vec4)
+    vector[vec4.x, vec4.y] = vec4.z
 }
